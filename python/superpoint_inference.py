@@ -542,14 +542,14 @@ if __name__ == '__main__':
 
   # Parse command line arguments.
   parser = argparse.ArgumentParser(description='PyTorch SuperPoint Demo.')
-  parser.add_argument('img_path', type=str, default='../datasets/kitti/sequences/00/image_0/000000.png',
-      help='Path to input image.')
+  parser.add_argument('img0_path', type=str, default='../datasets/kitti/sequences/00/image_0/000000.png',
+      help='Path to input image0.')
+  parser.add_argument('img1_path', type=str, default='../datasets/kitti/sequences/00/image_0/000000.png',
+      help='Path to input image1.')
   parser.add_argument('output_path', type=str, default='',
       help='Path to output file.')
   parser.add_argument('--weights_path', type=str, default='superpoint_quantized.pt',
       help='Path to pretrained weights file (default: superpoint_quantized.pt).')
-  parser.add_argument('--prefix', type=str, default='',
-      help='prefix to add in front of variables')
   parser.add_argument('--max_features', type=int, default=None,
       help='Maximum number of keypoints to print (default: no limit).')
   parser.add_argument('--nms_dist', type=int, default=4,
@@ -573,44 +573,116 @@ if __name__ == '__main__':
   print('==> Successfully loaded pre-trained network.')
 
   # Load image from img_path
-  img = cv2.imread(opt.img_path, 0).astype('float32') / 255.0
+  img0 = cv2.imread(opt.img0_path, 0).astype('float32') / 255.0
+  img1 = cv2.imread(opt.img1_path, 0).astype('float32') / 255.0
 
-  pts, desc, heatmap = fe.run(img)
-  print(pts.shape)
-  print(desc.shape)
-  print(heatmap.shape)
+  pts0, desc0, heatmap0 = fe.run(img0)
+  pts1, desc1, heatmap1 = fe.run(img1)
 
-  num_features = pts.shape[1] if opt.max_features is None else min(opt.max_features, pts.shape[1])
-  prefix = opt.prefix
+  num_features0 = pts0.shape[1] if opt.max_features is None else min(opt.max_features, pts0.shape[1])
+  num_features1 = pts1.shape[1] if opt.max_features is None else min(opt.max_features, pts1.shape[1])
+
+  prefix0 = "image0"
+  prefix1 = "image1"
 
   with open(opt.output_path, 'w') as fout:
       # Write header file
       fout.write("#pragma once\n\n")
       fout.write("#include <stdint.h>\n\n")
 
-      fout.write(f"const int {prefix}_rows = {img.shape[0]};\n")
-      fout.write(f"const int {prefix}_cols = {img.shape[1]};\n")
-      fout.write(f"const int {prefix}_channels = 1;\n\n")
+      fout.write(f"const int {prefix0}_rows = {img0.shape[0]};\n")
+      fout.write(f"const int {prefix0}_cols = {img0.shape[1]};\n")
+      fout.write(f"const int {prefix0}_channels = 1;\n\n")
 
-      fout.write(f"const int {prefix}_num_features = {num_features};\n")
-      fout.write(f"const int {prefix}_feature_xs[{num_features}] = {{\n")
-      for i in range(num_features):
-          fout.write(f"{int(pts[0, i])}, ")
+      fout.write(f"const int {prefix0}_feature_rows = {heatmap0.shape[0]};\n")
+      fout.write(f"const int {prefix0}_feature_cols = {heatmap0.shape[1]};\n")
+      fout.write(f"const int {prefix0}_num_features = {num_features0};\n")
+      fout.write(f"const int {prefix0}_feature_xs[{num_features0}] = {{\n")
+      for i in range(num_features0):
+          fout.write(f"{int(pts0[0, i])}, ")
       fout.write("};\n\n")
-      fout.write(f"const int {prefix}_feature_ys[{num_features}] = {{\n")
-      for i in range(num_features):
-          fout.write(f"{int(pts[1, i])}, ")
+      fout.write(f"const int {prefix0}_feature_ys[{num_features0}] = {{\n")
+      for i in range(num_features0):
+          fout.write(f"{int(pts0[1, i])}, ")
       fout.write("};\n\n")
-      fout.write(f"const float {prefix}_feature_scores[{num_features}] = {{\n")
-      for i in range(num_features):
-          fout.write(f"{pts[2, i]:.6f}, ")
+      fout.write(f"const float {prefix0}_feature_scores[{num_features0}] = {{\n")
+      for i in range(num_features0):
+          fout.write(f"{pts0[2, i]:.6f}, ")
       fout.write("};\n\n")
-      fout.write(f"const float {prefix}_feature_descriptors[{num_features}][256] = {{\n")
-      for i in range(num_features):
+      fout.write(f"const float {prefix0}_feature_descriptors[{num_features0}][256] = {{\n")
+      for i in range(num_features0):
           fout.write("{")
           for j in range(256):
-              fout.write(f"{desc[j, i]:.6f}, ")
+              fout.write(f"{desc0[j, i]:.6f}, ")
           fout.write("},\n")
       fout.write("};\n\n")
+
+      # Calculate the coordinate to index mapping
+      # Initialize the mapping with -1
+      feature_rows0 = heatmap0.shape[0]
+      feature_cols0 = heatmap0.shape[1]
+      cell_size = 8
+      coord_to_index0 = np.full((feature_rows0, feature_cols0), -1, dtype=np.int32)
+      for i in range(num_features0):
+          x = int(pts0[0, i])
+          y = int(pts0[1, i])
+          coord_to_index0[y // cell_size, x // cell_size] = i
+
+      # Write the mapping to the header file
+      fout.write(f"const int {prefix0}_coord_to_index[feature_rows0 * feature_cols0] = {{\n")
+      for i in range(feature_rows0):
+          for j in range(feature_cols0):
+              fout.write(f"{coord_to_index0[i, j]}, ")
+          fout.write("\n")
+      fout.write("};\n\n")
+
+
+      fout.write(f"const int {prefix1}_rows = {img1.shape[0]};\n")
+      fout.write(f"const int {prefix1}_cols = {img1.shape[1]};\n")
+      fout.write(f"const int {prefix1}_channels = 1;\n\n")
+      fout.write(f"const int {prefix1}_feature_rows = {heatmap1.shape[0]};\n")
+      fout.write(f"const int {prefix1}_feature_cols = {heatmap1.shape[1]};\n")
+      fout.write(f"const int {prefix1}_num_features = {num_features1};\n")
+      fout.write(f"const int {prefix1}_feature_xs[{num_features1}] = {{\n")
+      for i in range(num_features1):
+          fout.write(f"{int(pts1[0, i])}, ")
+      fout.write("};\n\n")
+      fout.write(f"const int {prefix1}_feature_ys[{num_features1}] = {{\n")
+      for i in range(num_features1):
+          fout.write(f"{int(pts1[1, i])}, ")
+      fout.write("};\n\n")
+      fout.write(f"const float {prefix1}_feature_scores[{num_features1}] = {{\n")
+      for i in range(num_features1):
+          fout.write(f"{pts1[2, i]:.6f}, ")
+      fout.write("};\n\n")
+      fout.write(f"const float {prefix1}_feature_descriptors[{num_features1}][256] = {{\n")
+      for i in range(num_features1):
+          fout.write("{")
+          for j in range(256):
+              fout.write(f"{desc1[j, i]:.6f}, ")
+          fout.write("},\n")
+      fout.write("};\n\n")
+
+      fout.write(f"const float {prefix1}_coord_to_index[]\n")
+
+      # Calculate the coordinate to index mapping
+      # Initialize the mapping with -1
+      feature_rows1 = heatmap1.shape[0]
+      feature_cols1 = heatmap1.shape[1]
+      cell_size = 8
+      for i in range(num_features1):
+          x = int(pts1[0, i])
+          y = int(pts1[1, i])
+          coord_to_index1[y // cell_size, x // cell_size] = i
+      
+      # Write the mapping to the header file
+      fout.write(f"const int {prefix1}_coord_to_index[feature_rows1 * feature_cols1] = {{\n")
+      for i in range(feature_rows1):
+          for j in range(feature_cols1):
+              fout.write(f"{coord_to_index1[i, j]}, ")
+          fout.write("\n")
+      fout.write("};\n\n")
+
+
 
 
