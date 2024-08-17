@@ -663,8 +663,6 @@ if __name__ == '__main__':
           fout.write("},\n")
       fout.write("};\n\n")
 
-      fout.write(f"const float {prefix1}_coord_to_index[]\n")
-
       # Calculate the coordinate to index mapping
       # Initialize the mapping with -1
       feature_rows1 = heatmap1.shape[0]
