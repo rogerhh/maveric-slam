@@ -629,7 +629,7 @@ if __name__ == '__main__':
           coord_to_index0[y // cell_size, x // cell_size] = i
 
       # Write the mapping to the header file
-      fout.write(f"const int {prefix0}_coord_to_index[feature_rows0 * feature_cols0] = {{\n")
+      fout.write(f"const int {prefix0}_coord_to_index[{feature_rows0 * feature_cols0}] = {{\n")
       for i in range(feature_rows0):
           for j in range(feature_cols0):
               fout.write(f"{coord_to_index0[i, j]}, ")
@@ -670,13 +670,14 @@ if __name__ == '__main__':
       feature_rows1 = heatmap1.shape[0]
       feature_cols1 = heatmap1.shape[1]
       cell_size = 8
+      coord_to_index1 = np.full((feature_rows1, feature_cols1), -1, dtype=np.int32)
       for i in range(num_features1):
           x = int(pts1[0, i])
           y = int(pts1[1, i])
           coord_to_index1[y // cell_size, x // cell_size] = i
       
       # Write the mapping to the header file
-      fout.write(f"const int {prefix1}_coord_to_index[feature_rows1 * feature_cols1] = {{\n")
+      fout.write(f"const int {prefix1}_coord_to_index[{feature_rows1 * feature_cols1}] = {{\n")
       for i in range(feature_rows1):
           for j in range(feature_cols1):
               fout.write(f"{coord_to_index1[i, j]}, ")
