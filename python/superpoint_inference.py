@@ -539,49 +539,22 @@ if __name__ == '__main__':
 
   # Parse command line arguments.
   parser = argparse.ArgumentParser(description='PyTorch SuperPoint Demo.')
-  parser.add_argument('input', type=str, default='',
-      help='Image directory or movie file or "camera" (for webcam).')
+  parser.add_argument('img_path', type=str, default='../datasets/kitti/sequences/00/image_0/000000.png',
+      help='Path to input image.')
+  parser.add_argument('output_path', type=str, default='',
+      help='Path to output file.')
   parser.add_argument('--weights_path', type=str, default='superpoint_v1.pth',
       help='Path to pretrained weights file (default: superpoint_v1.pth).')
-  parser.add_argument('--img_glob', type=str, default='*.png',
-      help='Glob match if directory of images is specified (default: \'*.png\').')
-  parser.add_argument('--skip', type=int, default=1,
-      help='Images to skip if input is movie or directory (default: 1).')
-  parser.add_argument('--show_extra', action='store_true',
-      help='Show extra debug outputs (default: False).')
-  parser.add_argument('--H', type=int, default=120,
-      help='Input image height (default: 120).')
-  parser.add_argument('--W', type=int, default=160,
-      help='Input image width (default:160).')
-  parser.add_argument('--display_scale', type=int, default=2,
-      help='Factor to scale output visualization (default: 2).')
-  parser.add_argument('--min_length', type=int, default=2,
-      help='Minimum length of point tracks (default: 2).')
-  parser.add_argument('--max_length', type=int, default=5,
-      help='Maximum length of point tracks (default: 5).')
   parser.add_argument('--nms_dist', type=int, default=4,
       help='Non Maximum Suppression (NMS) distance (default: 4).')
   parser.add_argument('--conf_thresh', type=float, default=0.015,
       help='Detector confidence threshold (default: 0.015).')
   parser.add_argument('--nn_thresh', type=float, default=0.7,
       help='Descriptor matching threshold (default: 0.7).')
-  parser.add_argument('--camid', type=int, default=0,
-      help='OpenCV webcam video capture ID, usually 0 or 1 (default: 0).')
-  parser.add_argument('--waitkey', type=int, default=1,
-      help='OpenCV waitkey time in ms (default: 1).')
   parser.add_argument('--cuda', action='store_true',
       help='Use cuda GPU to speed up network processing speed (default: False)')
-  parser.add_argument('--no_display', action='store_true',
-      help='Do not display images to screen. Useful if running remotely (default: False).')
-  parser.add_argument('--write', action='store_true',
-      help='Save output frames to a directory (default: False)')
-  parser.add_argument('--write_dir', type=str, default='tracker_outputs/',
-      help='Directory where to write output frames (default: tracker_outputs/).')
   opt = parser.parse_args()
   print(opt)
-
-  # This class helps load input images from different sources.
-  vs = VideoStreamer(opt.input, opt.camid, opt.H, opt.W, opt.skip, opt.img_glob)
 
   print('==> Loading pre-trained network.')
   # This class runs the SuperPoint network and processes its outputs.
@@ -592,27 +565,14 @@ if __name__ == '__main__':
                           cuda=opt.cuda)
   print('==> Successfully loaded pre-trained network.')
 
-  # This class helps merge consecutive point matches into tracks.
-  tracker = PointTracker(opt.max_length, nn_thresh=fe.nn_thresh)
+  # Load image from img_path
+  img = cv2.imread(opt.img_path, 0).astype('float32') / 255.0
+  print(type(img))
+  print(img.shape)
+  print(img.dtype)
+  print(img)
+  exit(0)
 
-  # Create a window to display the demo.
-  if not opt.no_display:
-    win = 'SuperPoint Tracker'
-    cv2.namedWindow(win)
-  else:
-    print('Skipping visualization, will not show a GUI.')
-
-  # Font parameters for visualizaton.
-  font = cv2.FONT_HERSHEY_DUPLEX
-  font_clr = (255, 255, 255)
-  font_pt = (4, 12)
-  font_sc = 0.4
-
-  # Create output directory if desired.
-  if opt.write:
-    print('==> Will write outputs to %s' % opt.write_dir)
-    if not os.path.exists(opt.write_dir):
-      os.makedirs(opt.write_dir)
 
   print('==> Running Demo.')
   while True:
