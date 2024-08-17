@@ -92,17 +92,20 @@ class SuperPointFrontend(object):
     self.cell = 8 # Size of each output cell. Keep this fixed.
     self.border_remove = 4 # Remove points this close to the border.
 
-    # Load the network in inference mode.
-    self.net = SuperPointNet()
-    if cuda:
-      # Train on GPU, deploy on GPU.
-      self.net.load_state_dict(torch.load(weights_path))
-      self.net = self.net.cuda()
-    else:
-      # Train on GPU, deploy on CPU.
-      self.net.load_state_dict(torch.load(weights_path,
-                               map_location=lambda storage, loc: storage))
-    self.net.eval()
+    # # Load the network in inference mode.
+    # self.net = SuperPointNet()
+    # if cuda:
+    #   # Train on GPU, deploy on GPU.
+    #   self.net.load_state_dict(torch.load(weights_path))
+    #   self.net = self.net.cuda()
+    # else:
+    #   # Train on GPU, deploy on CPU.
+    #   self.net.load_state_dict(torch.load(weights_path,
+    #                            map_location=lambda storage, loc: storage))
+    # self.net.eval()
+    backend = 'qnnpack'
+    torch.backends.quantized.engine = backend
+    self.net = torch.load(weights_path)
 
   def nms_fast(self, in_corners, H, W, dist_thresh):
     """
@@ -543,8 +546,8 @@ if __name__ == '__main__':
       help='Path to input image.')
   parser.add_argument('output_path', type=str, default='',
       help='Path to output file.')
-  parser.add_argument('--weights_path', type=str, default='superpoint_v1.pth',
-      help='Path to pretrained weights file (default: superpoint_v1.pth).')
+  parser.add_argument('--weights_path', type=str, default='superpoint_quantized.pt',
+      help='Path to pretrained weights file (default: superpoint_quantized.pt).')
   parser.add_argument('--nms_dist', type=int, default=4,
       help='Non Maximum Suppression (NMS) distance (default: 4).')
   parser.add_argument('--conf_thresh', type=float, default=0.015,
