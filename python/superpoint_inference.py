@@ -590,7 +590,7 @@ if __name__ == '__main__':
 
       fout.write(f"const int {prefix}_rows = {img.shape[0]};\n")
       fout.write(f"const int {prefix}_cols = {img.shape[1]};\n")
-      fout.write(f"const int {prefix}_channels = {img.shape[2]};\n\n")
+      fout.write(f"const int {prefix}_channels = 1;\n\n")
 
       fout.write(f"const int {prefix}_num_features = {num_features};\n")
       fout.write(f"const int {prefix}_feature_xs[{num_features}] = {{\n")
