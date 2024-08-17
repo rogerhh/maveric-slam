@@ -548,6 +548,10 @@ if __name__ == '__main__':
       help='Path to output file.')
   parser.add_argument('--weights_path', type=str, default='superpoint_quantized.pt',
       help='Path to pretrained weights file (default: superpoint_quantized.pt).')
+  parser.add_argument('--prefix', type=str, default='',
+      help='prefix to add in front of variables')
+  parser.add_argument('--max_features', type=int, default=None,
+      help='Maximum number of keypoints to print (default: no limit).')
   parser.add_argument('--nms_dist', type=int, default=4,
       help='Non Maximum Suppression (NMS) distance (default: 4).')
   parser.add_argument('--conf_thresh', type=float, default=0.015,
@@ -575,3 +579,29 @@ if __name__ == '__main__':
   print(pts.shape)
   print(desc.shape)
   print(heatmap.shape)
+  print(desc)
+  exit(0)
+
+  num_features = pts.shape[1] if opt.max_features is None else min(opt.max_features, pts.shape[1])
+  prefix = opt.prefix
+
+  with open(opt.output_path, 'w') as fout:
+      # Write header file
+      fout.write("#pragma once\n\n")
+      fout.write("#include <stdint.h>\n\n")
+
+      fout.write(f"const int {prefix}_num_features = {num_features};\n")
+      fout.write(f"const int {prefix}_feature_xs[{num_features}] = {{\n")
+      for i in range(num_features):
+          fout.write(f"{int(pts[0, i])}, ")
+      fout.write("};\n\n")
+      fout.write(f"const int {prefix}_feature_ys[{num_features}] = {{\n")
+      for i in range(num_features):
+          fout.write(f"{int(pts[1, i])}, ")
+      fout.write("};\n\n")
+      fout.write(f"const float {prefix}_feature_scores[{num_features}] = {{\n")
+      for i in range(num_features):
+          fout.write(f"{pts[2, i]:.6f}, ")
+      fout.write("};\n\n")
+
+
