@@ -579,8 +579,6 @@ if __name__ == '__main__':
   print(pts.shape)
   print(desc.shape)
   print(heatmap.shape)
-  print(desc)
-  exit(0)
 
   num_features = pts.shape[1] if opt.max_features is None else min(opt.max_features, pts.shape[1])
   prefix = opt.prefix
@@ -602,6 +600,13 @@ if __name__ == '__main__':
       fout.write(f"const float {prefix}_feature_scores[{num_features}] = {{\n")
       for i in range(num_features):
           fout.write(f"{pts[2, i]:.6f}, ")
+      fout.write("};\n\n")
+      fout.write(f"const float {prefix}_feature_descriptors[{num_features}][256] = {{\n")
+      for i in range(num_features):
+          fout.write("{")
+          for j in range(256):
+              fout.write(f"{desc[j, i]:.6f}, ")
+          fout.write("},\n")
       fout.write("};\n\n")
 
 

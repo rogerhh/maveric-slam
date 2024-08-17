@@ -10,14 +10,14 @@ typedef struct {
   // Features
   int feature_rows;     // H / 8
   int feature_cols;     // W / 8
-  uint32_t* descriptors;
+  float* descriptors;
   float* probabilities;
 
 } Frame;
 
 void frame_create(int rows, int cols, int channels, char* data, 
                   int feature_rows, int feature_cols, 
-                  uint32_t* descriptors, float* probabilities,
+                  float* descriptors, float* probabilities,
                   Frame* frame) {
     frame->rows = rows;
     frame->cols = cols;
