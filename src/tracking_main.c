@@ -121,7 +121,7 @@ int main() {
   
   // Run RANSAC to estimate the essential matrix
   const int num_iterations = 10;
-  const float inlier_threshold = 0.1;
+  const float inlier_threshold = 1.1;
   ransac_essential_matrix(num_matches, points1, points2, K, 
                           num_iterations, inlier_threshold,
                           best_E, best_inliers, &num_inliers);
@@ -129,6 +129,16 @@ int main() {
   // Recover rotation and translation from the essential matrix
   float R1[3][3], R2[3][3], t[3];
   recover_pose_from_essential_matrix(best_E, R1, R2, t);
+
+  printf("R1: %f %f %f\n", R1[0][0], R1[0][1], R1[0][2]);
+  printf("    %f %f %f\n", R1[1][0], R1[1][1], R1[1][2]);
+  printf("    %f %f %f\n", R1[2][0], R1[2][1], R1[2][2]);
+
+  printf("R2: %f %f %f\n", R2[0][0], R2[0][1], R2[0][2]);
+  printf("    %f %f %f\n", R2[1][0], R2[1][1], R2[1][2]);
+  printf("    %f %f %f\n", R2[2][0], R2[2][1], R2[2][2]);
+
+  printf("t: %f %f %f\n", t[0], t[1], t[2]);
 
   return 0;
 }
