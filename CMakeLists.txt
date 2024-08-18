@@ -4,11 +4,14 @@ cmake_minimum_required(VERSION 3.10)
 project(maveric-slam C)
 
 # Include directories
-include_directories(include include/data/tracking)
+include_directories(include 
+                    include/data/tracking
+                    include/svd)
 
 # Source files
 set(SOURCES
     src/tracking_main.c
+    src/pnp_solver.c
 )
 
 # Create the executable

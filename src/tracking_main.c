@@ -1,8 +1,12 @@
 #include "../include/frame.h"
+#include "../include/pnp_solver.h"
 #include "../include/data/tracking/pair0.h"
 
 #include <stdbool.h>
 #include <stdio.h>
+
+#define MATCH_THRESHOLD 0.8
+#define MAX_NUM_MATCH 100
 
 int main() {
   Frame frame0;
@@ -25,6 +29,9 @@ int main() {
   int shift_y_grid = 4;
   int radius_grid = 4;
 
+  float points1[MAX_NUM_MATCH][2];
+  float points2[MAX_NUM_MATCH][2];
+
   // Match features
   int num_matches = 0;
   for(int i = 0; i < frame0.num_features; i++) {
@@ -38,7 +45,7 @@ int main() {
 
     bool found_match = false;
     int best_index = -1;
-    float best_distance = 0;
+    float best_norm = 0;
 
     // Iterate over the search window
     for(int x1_grid = x0_grid + shift_x_grid - radius_grid; 
@@ -51,26 +58,60 @@ int main() {
           }
           const float* descriptor1 = frame1.descriptors[index1];
 
-          float distance = descriptor_distance(descriptor0, descriptor1);
-          if(!found_match || distance < best_distance) {
-            found_match = true;
-            best_index = index1;
-            best_distance = distance;
+          float norm = descriptor_distance(descriptor0, descriptor1);
+
+          if(norm > MATCH_THRESHOLD) {
+            if(!found_match || norm < best_norm) {
+              found_match = true;
+              best_index = index1;
+              best_norm = norm;
+            }
           }
       }
     }
 
     int best_x = 0;
     int best_y = 0;
-    if(found_match) {
+    if(found_match || num_matches < MAX_NUM_MATCH) {
       best_x = frame1.feature_xs[best_index];
       best_y = frame1.feature_ys[best_index];
+
+      points1[num_matches][0] = x0;
+      points1[num_matches][1] = y0;
+      points2[num_matches][0] = best_x;
+      points2[num_matches][1] = best_y;
+
       num_matches++;
+    }
+
+    if(num_matches >= MAX_NUM_MATCH) {
+      break;
     }
     
   }
 
   printf("Number of matches: %d\n", num_matches);
+
+  // Variables to store the results
+  float best_E[3][3];
+  int best_inliers[10];
+  int num_inliers;
+
+  // Camera intrinsics
+  float K[3][3] = {{517.306408, 0.0, 318.643040},
+                   {0.0, 516.469215, 255.313989},
+                   {0.0, 0.0, 1.0}};
+  
+  // Run RANSAC to estimate the essential matrix
+  const int num_iterations = 10;
+  const float inlier_threshold = 0.1;
+  ransac_essential_matrix(num_matches, points1, points2, K, 
+                          num_iterations, inlier_threshold,
+                          best_E, best_inliers, &num_inliers);
+  
+  // Recover rotation and translation from the essential matrix
+  float R1[3][3], R2[3][3], t[3];
+  recover_pose_from_essential_matrix(best_E, R1, R2, t);
 
   return 0;
 }
