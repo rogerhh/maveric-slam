@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <float.h>
-#include "svd.h"
+#include "../include/svd/svd.h"
 #include "pnp_solver.h"
 
 void normalize_points(const int num_points, const float points[][2], 
@@ -107,15 +107,19 @@ void ransac_essential_matrix(const int num_points,
 
 // Dummy implementation of SVD (replace with actual implementation)
 void call_svd(float A[3][3], float U[3][3], float S[3], float Vt[3][3]) {
+  float S01, S02, S10, S12, S20, S21;
   svd(A[0][0], A[0][1], A[0][2], 
       A[1][0], A[1][1], A[1][2], 
       A[2][0], A[2][1], A[2][2], 
-      U[0][0], U[0][1], U[0][2], 
-      U[1][0], U[1][1], U[1][2], 
-      U[2][0], U[2][1], U[2][2], 
-      S[0], S[1], S[2], Vt[0][0], 
-      Vt[0][1], Vt[0][2], Vt[1][0], 
-      Vt[1][1], Vt[1][2], Vt[2][0], Vt[2][1], Vt[2][2]);
+      &U[0][0], &U[0][1], &U[0][2], 
+      &U[1][0], &U[1][1], &U[1][2], 
+      &U[2][0], &U[2][1], &U[2][2], 
+      &S[0], &S01, &S02,
+      &S10, &S[1], &S12,
+      &S20, &S21, &S[2], 
+      &Vt[0][0], &Vt[0][1], &Vt[0][2], 
+      &Vt[1][0], &Vt[1][1], &Vt[1][2], 
+      &Vt[2][0], &Vt[2][1], &Vt[2][2]);
 }
 
 // Recover rotation and translation from an essential matrix
@@ -124,7 +128,7 @@ void recover_pose_from_essential_matrix(float E[3][3],float R1[3][3],
 
     // Perform SVD on the essential matrix
     float U[3][3], S[3], Vt[3][3];
-    svd(E, U, S, Vt);
+    call_svd(E, U, S, Vt);
     
     // Enforce the rank-2 constraint on the essential matrix
     S[2] = 0.0;

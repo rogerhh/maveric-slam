@@ -34,7 +34,7 @@ http://www.lomont.org/Math/Papers/2003/InvSqrt.pdf
 http://playstation2-linux.com/download/p2lsd/fastrsqrt.pdf
 http://www.beyond3d.com/content/articles/8/
 */
-inline float rsqrt(float x) {
+float rsqrt(float x) {
 // int ihalf = *(int *)&x - 0x00800000; // Alternative to next line,
 // float xhalf = *(float *)&ihalf;      // for sufficiently large nos.
    float xhalf = 0.5f*x;
@@ -51,7 +51,7 @@ inline float rsqrt(float x) {
 increased accuracy. The constant 0x5f37599e makes the relative error
 range from 0 to -0.00000463.
    You can't balance the error by adjusting the constant. */
-inline float rsqrt1(float x) {
+float rsqrt1(float x) {
    float xhalf = 0.5f*x;
    int i = *(int *)&x;          // View x as an int.
    i = 0x5f37599e - (i >> 1);   // Initial guess.
@@ -61,12 +61,12 @@ inline float rsqrt1(float x) {
    return x;
 }
 
-inline float accurateSqrt(float x)
+float accurateSqrt(float x)
 {
     return x * rsqrt1(x);
 }
 
-inline void condSwap(bool c, float* X, float* Y)
+void condSwap(bool c, float* X, float* Y)
 {
     // used in step 2
     float Z = *X;
@@ -74,7 +74,7 @@ inline void condSwap(bool c, float* X, float* Y)
     *Y = c ? Z : *Y;
 }
 
-inline void condNegSwap(bool c, float* X, float* Y)
+void condNegSwap(bool c, float* X, float* Y)
 {
     // used in step 2 and 3
     float Z = -(*X);
@@ -83,7 +83,7 @@ inline void condNegSwap(bool c, float* X, float* Y)
 }
 
 // matrix multiplication M = A * B
-inline void multAB(float a11, float a12, float a13,
+void multAB(float a11, float a12, float a13,
           float a21, float a22, float a23,
           float a31, float a32, float a33,
           //
@@ -102,7 +102,7 @@ inline void multAB(float a11, float a12, float a13,
 }
 
 // matrix multiplication M = Transpose[A] * B
-inline void multAtB(float a11, float a12, float a13,
+void multAtB(float a11, float a12, float a13,
           float a21, float a22, float a23,
           float a31, float a32, float a33,
           //
@@ -119,7 +119,7 @@ inline void multAtB(float a11, float a12, float a13,
   *m31=a13*b11 + a23*b21 + a33*b31; *m32=a13*b12 + a23*b22 + a33*b32; *m33=a13*b13 + a23*b23 + a33*b33;
 }
 
-inline void quatToMat3(const float * qV,
+void quatToMat3(const float * qV,
 float* m11, float* m12, float* m13,
 float* m21, float* m22, float* m23,
 float* m31, float* m32, float* m33
@@ -145,7 +145,7 @@ float* m31, float* m32, float* m33
     *m31=2*(qxz - qwy);     *m32=2*(qyz + qwx);     *m33=1 - 2*(qxx + qyy);
 }
 
-inline void approximateGivensQuaternion(float a11, float a12, float a22, float* ch, float* sh)
+void approximateGivensQuaternion(float a11, float a12, float a22, float* ch, float* sh)
 {
 /*
      * Given givens angle computed by approximateGivensAngles,
@@ -162,7 +162,7 @@ inline void approximateGivensQuaternion(float a11, float a12, float a22, float* 
     *sh=b?w*(*sh):(float)_sstar;
 }
 
-inline void jacobiConjugation( const int x, const int y, const int z,
+void jacobiConjugation( const int x, const int y, const int z,
                         float* s11,
                         float* s21, float* s22,
                         float* s31, float* s32, float* s33,
@@ -215,13 +215,15 @@ inline void jacobiConjugation( const int x, const int y, const int z,
 
 }
 
-inline float dist2(float x, float y, float z)
+float dist2(float x, float y, float z)
 {
     return x*x+y*y+z*z;
 }
 
+void test() {}
+
 // finds transformation that diagonalizes a symmetric matrix
-inline void jacobiEigenanlysis( // symmetric matrix
+void jacobiEigenanlysis( // symmetric matrix
                                 float* s11,
                                 float* s21, float*s22,
                                 float* s31, float*s32, float* s33,
@@ -242,7 +244,7 @@ inline void jacobiEigenanlysis( // symmetric matrix
 }
 
 
-inline void sortSingularValues(// matrix that we want to decompose
+void sortSingularValues(// matrix that we want to decompose
                                float* b11, float* b12, float* b13,
                                float* b21, float* b22, float* b23,
                                float* b31, float* b32, float* b33,
@@ -289,7 +291,7 @@ void QRGivensQuaternion(float a1, float a2, float* ch, float* sh)
 }
 
 
-inline void QRDecomposition(// matrix that we want to decompose
+void QRDecomposition(// matrix that we want to decompose
                             float b11, float b12, float b13,
                             float b21, float b22, float b23,
                             float b31, float b32, float b33,
@@ -389,7 +391,7 @@ void svd(// input A
     float b31, b32, b33;
     multAB(a11,a12,a13,a21,a22,a23,a31,a32,a33,
            *v11,*v12,*v13,*v21,*v22,*v23,*v31,*v32,*v33,
-           &b11, &b12, &b13, &b21, &b22, &b23, &b31, &b32, &b33);
+           &b11,&b12,&b13,&b21,&b22,&b23,&b31,&b32,&b33);
 
     // sort singular values and find V
     sortSingularValues(&b11,&b12,&b13,&b21,&b22,&b23,&b31,&b32,&b33,

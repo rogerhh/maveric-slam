@@ -5,8 +5,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#define MATCH_THRESHOLD 0.8
-#define MAX_NUM_MATCH 100
+#define MATCH_THRESHOLD 0.9
+#define MAX_NUM_MATCH 2000
 
 int main() {
   Frame frame0;
@@ -47,6 +47,11 @@ int main() {
     int best_index = -1;
     float best_norm = 0;
 
+    float prob0 = image0_feature_scores[i];
+    if(prob0 < 0.4) {
+      continue;
+    }
+
     // Iterate over the search window
     for(int x1_grid = x0_grid + shift_x_grid - radius_grid; 
             x1_grid <= x0_grid + shift_x_grid + radius_grid; x1_grid++) {
@@ -56,6 +61,12 @@ int main() {
           if(index1 == -1) {
             continue;
           }
+
+          float prob = image1_feature_scores[index1];
+          if(prob < 0.4) {
+            continue;
+          }
+
           const float* descriptor1 = frame1.descriptors[index1];
 
           float norm = descriptor_distance(descriptor0, descriptor1);
