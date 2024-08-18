@@ -590,12 +590,16 @@ if __name__ == '__main__':
       fout.write("#pragma once\n\n")
       fout.write("#include <stdint.h>\n\n")
 
+      cell_size = 8
+      feature_rows0 = heatmap0.shape[0] // cell_size
+      feature_cols0 = heatmap0.shape[1] // cell_size
+
       fout.write(f"const int {prefix0}_rows = {img0.shape[0]};\n")
       fout.write(f"const int {prefix0}_cols = {img0.shape[1]};\n")
       fout.write(f"const int {prefix0}_channels = 1;\n\n")
 
-      fout.write(f"const int {prefix0}_feature_rows = {heatmap0.shape[0]};\n")
-      fout.write(f"const int {prefix0}_feature_cols = {heatmap0.shape[1]};\n")
+      fout.write(f"const int {prefix0}_feature_rows = {feature_rows0};\n")
+      fout.write(f"const int {prefix0}_feature_cols = {feature_cols0};\n")
       fout.write(f"const int {prefix0}_num_features = {num_features0};\n")
       fout.write(f"const int {prefix0}_feature_xs[{num_features0}] = {{\n")
       for i in range(num_features0):
@@ -619,9 +623,6 @@ if __name__ == '__main__':
 
       # Calculate the coordinate to index mapping
       # Initialize the mapping with -1
-      cell_size = 8
-      feature_rows0 = heatmap0.shape[0] // cell_size
-      feature_cols0 = heatmap0.shape[1] // cell_size
       coord_to_index0 = np.full((feature_rows0, feature_cols0), -1, dtype=np.int32)
       for i in range(num_features0):
           x = int(pts0[0, i])
@@ -636,12 +637,15 @@ if __name__ == '__main__':
           fout.write("\n")
       fout.write("};\n\n")
 
+      cell_size = 8
+      feature_rows1 = heatmap1.shape[0] // cell_size
+      feature_cols1 = heatmap1.shape[1] // cell_size
 
       fout.write(f"const int {prefix1}_rows = {img1.shape[0]};\n")
       fout.write(f"const int {prefix1}_cols = {img1.shape[1]};\n")
       fout.write(f"const int {prefix1}_channels = 1;\n\n")
-      fout.write(f"const int {prefix1}_feature_rows = {heatmap1.shape[0]};\n")
-      fout.write(f"const int {prefix1}_feature_cols = {heatmap1.shape[1]};\n")
+      fout.write(f"const int {prefix1}_feature_rows = {feature_rows1};\n")
+      fout.write(f"const int {prefix1}_feature_cols = {feature_cols1};\n")
       fout.write(f"const int {prefix1}_num_features = {num_features1};\n")
       fout.write(f"const int {prefix1}_feature_xs[{num_features1}] = {{\n")
       for i in range(num_features1):
@@ -665,9 +669,6 @@ if __name__ == '__main__':
 
       # Calculate the coordinate to index mapping
       # Initialize the mapping with -1
-      feature_rows1 = heatmap1.shape[0] // cell_size
-      feature_cols1 = heatmap1.shape[1] // cell_size
-      cell_size = 8
       coord_to_index1 = np.full((feature_rows1, feature_cols1), -1, dtype=np.int32)
       for i in range(num_features1):
           x = int(pts1[0, i])
