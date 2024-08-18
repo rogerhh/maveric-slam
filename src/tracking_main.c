@@ -5,6 +5,9 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
+
 #define MATCH_THRESHOLD 0.9
 #define MAX_NUM_MATCH 2000
 
@@ -52,11 +55,14 @@ int main() {
       continue;
     }
 
+    int min_x1_grid = MAX(x0_grid + shift_x_grid - radius_grid, 0);
+    int max_x1_grid = MIN(x0_grid + shift_x_grid + radius_grid, frame1.feature_cols - 1);
+    int min_y1_grid = MAX(y0_grid + shift_y_grid - radius_grid, 0);
+    int max_y1_grid = MIN(y0_grid + shift_y_grid + radius_grid, frame1.feature_rows - 1);
+
     // Iterate over the search window
-    for(int x1_grid = x0_grid + shift_x_grid - radius_grid; 
-            x1_grid <= x0_grid + shift_x_grid + radius_grid; x1_grid++) {
-      for(int y1_grid = y0_grid + shift_y_grid - radius_grid; 
-              y1_grid <= y0_grid + shift_y_grid + radius_grid; y1_grid++) {
+    for(int x1_grid = min_x1_grid; x1_grid <= max_x1_grid; x1_grid++) {
+      for(int y1_grid = min_y1_grid; y1_grid <= max_y1_grid; y1_grid++) {
           int index1 = frame1.coords_to_index[y1_grid * frame1.feature_cols + x1_grid];
           if(index1 == -1) {
             continue;
@@ -76,7 +82,6 @@ int main() {
               found_match = true;
               best_index = index1;
               best_norm = dist;
-              printf("dist: %f\n", dist);
             }
           }
       }
