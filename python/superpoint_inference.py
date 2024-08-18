@@ -619,9 +619,9 @@ if __name__ == '__main__':
 
       # Calculate the coordinate to index mapping
       # Initialize the mapping with -1
-      feature_rows0 = heatmap0.shape[0]
-      feature_cols0 = heatmap0.shape[1]
       cell_size = 8
+      feature_rows0 = heatmap0.shape[0] // cell_size
+      feature_cols0 = heatmap0.shape[1] // cell_size
       coord_to_index0 = np.full((feature_rows0, feature_cols0), -1, dtype=np.int32)
       for i in range(num_features0):
           x = int(pts0[0, i])
@@ -665,8 +665,8 @@ if __name__ == '__main__':
 
       # Calculate the coordinate to index mapping
       # Initialize the mapping with -1
-      feature_rows1 = heatmap1.shape[0]
-      feature_cols1 = heatmap1.shape[1]
+      feature_rows1 = heatmap1.shape[0] // cell_size
+      feature_cols1 = heatmap1.shape[1] // cell_size
       cell_size = 8
       coord_to_index1 = np.full((feature_rows1, feature_cols1), -1, dtype=np.int32)
       for i in range(num_features1):
