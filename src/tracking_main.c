@@ -69,13 +69,14 @@ int main() {
 
           const float* descriptor1 = frame1.descriptors[index1];
 
-          float norm = descriptor_distance(descriptor0, descriptor1);
+          float dist = descriptor_distance(descriptor0, descriptor1);
 
-          if(norm > MATCH_THRESHOLD) {
-            if(!found_match || norm < best_norm) {
+          if(dist > MATCH_THRESHOLD) {
+            if(!found_match || dist < best_norm) {
               found_match = true;
               best_index = index1;
-              best_norm = norm;
+              best_norm = dist;
+              printf("dist: %f\n", dist);
             }
           }
       }
