@@ -108,6 +108,9 @@ void ransac_essential_matrix(const int num_points,
 // Dummy implementation of SVD (replace with actual implementation)
 void call_svd(float A[3][3], float U[3][3], float S[3], float Vt[3][3]) {
   float S01, S02, S10, S12, S20, S21;
+  printf("A: %f %f %f\n", A[0][0], A[0][1], A[0][2]);
+  printf("   %f %f %f\n", A[1][0], A[1][1], A[1][2]);
+  printf("   %f %f %f\n", A[2][0], A[2][1], A[2][2]);
   svd(A[0][0], A[0][1], A[0][2], 
       A[1][0], A[1][1], A[1][2], 
       A[2][0], A[2][1], A[2][2], 

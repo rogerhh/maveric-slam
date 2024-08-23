@@ -5,6 +5,9 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
+
 #define MATCH_THRESHOLD 0.9
 #define MAX_NUM_MATCH 2000
 
@@ -52,11 +55,14 @@ int main() {
       continue;
     }
 
+    int min_x1_grid = MAX(x0_grid + shift_x_grid - radius_grid, 0);
+    int max_x1_grid = MIN(x0_grid + shift_x_grid + radius_grid, frame1.feature_cols - 1);
+    int min_y1_grid = MAX(y0_grid + shift_y_grid - radius_grid, 0);
+    int max_y1_grid = MIN(y0_grid + shift_y_grid + radius_grid, frame1.feature_rows - 1);
+
     // Iterate over the search window
-    for(int x1_grid = x0_grid + shift_x_grid - radius_grid; 
-            x1_grid <= x0_grid + shift_x_grid + radius_grid; x1_grid++) {
-      for(int y1_grid = y0_grid + shift_y_grid - radius_grid; 
-              y1_grid <= y0_grid + shift_y_grid + radius_grid; y1_grid++) {
+    for(int x1_grid = min_x1_grid; x1_grid <= max_x1_grid; x1_grid++) {
+      for(int y1_grid = min_y1_grid; y1_grid <= max_y1_grid; y1_grid++) {
           int index1 = frame1.coords_to_index[y1_grid * frame1.feature_cols + x1_grid];
           if(index1 == -1) {
             continue;
@@ -69,13 +75,13 @@ int main() {
 
           const float* descriptor1 = frame1.descriptors[index1];
 
-          float norm = descriptor_distance(descriptor0, descriptor1);
+          float dist = descriptor_distance(descriptor0, descriptor1);
 
-          if(norm > MATCH_THRESHOLD) {
-            if(!found_match || norm < best_norm) {
+          if(dist > MATCH_THRESHOLD) {
+            if(!found_match || dist < best_norm) {
               found_match = true;
               best_index = index1;
-              best_norm = norm;
+              best_norm = dist;
             }
           }
       }
@@ -115,7 +121,7 @@ int main() {
   
   // Run RANSAC to estimate the essential matrix
   const int num_iterations = 10;
-  const float inlier_threshold = 0.1;
+  const float inlier_threshold = 1.1;
   ransac_essential_matrix(num_matches, points1, points2, K, 
                           num_iterations, inlier_threshold,
                           best_E, best_inliers, &num_inliers);
@@ -123,6 +129,16 @@ int main() {
   // Recover rotation and translation from the essential matrix
   float R1[3][3], R2[3][3], t[3];
   recover_pose_from_essential_matrix(best_E, R1, R2, t);
+
+  printf("R1: %f %f %f\n", R1[0][0], R1[0][1], R1[0][2]);
+  printf("    %f %f %f\n", R1[1][0], R1[1][1], R1[1][2]);
+  printf("    %f %f %f\n", R1[2][0], R1[2][1], R1[2][2]);
+
+  printf("R2: %f %f %f\n", R2[0][0], R2[0][1], R2[0][2]);
+  printf("    %f %f %f\n", R2[1][0], R2[1][1], R2[1][2]);
+  printf("    %f %f %f\n", R2[2][0], R2[2][1], R2[2][2]);
+
+  printf("t: %f %f %f\n", t[0], t[1], t[2]);
 
   return 0;
 }
