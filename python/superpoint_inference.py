@@ -576,6 +576,12 @@ if __name__ == '__main__':
   img0 = cv2.imread(opt.img0_path, 0).astype('float32') / 255.0
   img1 = cv2.imread(opt.img1_path, 0).astype('float32') / 255.0
 
+  crop_shape = (640, 192)
+  img0 = cv2.resize(img0, crop_shape)
+  img1 = cv2.resize(img1, crop_shape)
+
+  print("image size = ", img0.shape)
+
   pts0, desc0, heatmap0 = fe.run(img0)
   pts1, desc1, heatmap1 = fe.run(img1)
 
