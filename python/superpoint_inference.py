@@ -7,6 +7,8 @@ import time
 import cv2
 import torch
 
+CELL_SIZE = 4
+
 # Stub to warn about opencv version.
 if int(cv2.__version__[0]) < 3: # pragma: no cover
   print('Warning: OpenCV 3 is not installed')
@@ -89,7 +91,7 @@ class SuperPointFrontend(object):
     self.nms_dist = nms_dist
     self.conf_thresh = conf_thresh
     self.nn_thresh = nn_thresh # L2 descriptor distance for good match.
-    self.cell = 8 # Size of each output cell. Keep this fixed.
+    self.cell = CELL_SIZE # Size of each output cell. Keep this fixed.
     self.border_remove = 4 # Remove points this close to the border.
 
     # # Load the network in inference mode.
@@ -596,7 +598,7 @@ if __name__ == '__main__':
       fout.write("#pragma once\n\n")
       fout.write("#include <stdint.h>\n\n")
 
-      cell_size = 8
+      cell_size = CELL_SIZE
       feature_rows0 = heatmap0.shape[0] // cell_size
       feature_cols0 = heatmap0.shape[1] // cell_size
 
@@ -643,7 +645,6 @@ if __name__ == '__main__':
           fout.write("\n")
       fout.write("};\n\n")
 
-      cell_size = 8
       feature_rows1 = heatmap1.shape[0] // cell_size
       feature_cols1 = heatmap1.shape[1] // cell_size
 
