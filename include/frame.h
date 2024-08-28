@@ -16,28 +16,32 @@ typedef struct {
   int feature_cols;     // W / 8
   const int* feature_xs;
   const int* feature_ys;
-  const float (*descriptors)[DESCRIPTOR_SIZE];
-  const float* probabilities;
 
-  const int* coords_to_index;
+  float semi_scale;
+  const int8_t* semi;
+  float desc_scale;
+  const int8_t* desc;
+
+  // const float (*descriptors)[DESCRIPTOR_SIZE];
+  // const float* probabilities;
+
+  // const int* coords_to_index;
 
 } Frame;
 
 void frame_create(const int rows, const int cols, const int channels, const char* data, 
-                  const int num_features, const int feature_rows, const int feature_cols, 
-                  const int* feature_xs, const int* feature_ys,
-                  const float (*descriptors)[DESCRIPTOR_SIZE], const float* probabilities,
-                  const int* coords_to_index, Frame* frame) {
-    frame->rows = rows;
-    frame->cols = cols;
-    frame->channels = channels;
-    frame->data = data;
-    frame->num_features = num_features;
-    frame->feature_rows = feature_rows;
-    frame->feature_cols = feature_cols;
-    frame->feature_xs = feature_xs;
-    frame->feature_ys = feature_ys;
-    frame->descriptors = descriptors;
-    frame->probabilities = probabilities;
-    frame->coords_to_index = coords_to_index;
+                  const int feature_rows, const int feature_cols, 
+                  const float semi_scale, const int8_t* semi,
+                  const float desc_scale, const int8_t* desc,
+                  Frame* frame) {
+  frame->rows = rows;
+  frame->cols = cols;
+  frame->channels = channels;
+  frame->data = data;
+  frame->feature_rows = feature_rows;
+  frame->feature_cols = feature_cols;
+  frame->semi_scale = semi_scale;
+  frame->semi = semi;
+  frame->desc_scale = desc_scale;
+  frame->desc = desc;
 }

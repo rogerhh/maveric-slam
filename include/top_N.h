@@ -7,3 +7,7 @@
 // 2. set indices to be approximately the top N probabilities
 void compute_top_N(float scale, int8_t semi[2400][65], int N, 
                    int* num_selected, int* N_patches, int* N_indices, float* N_probs);
+
+void compute_softmax(float scale, int8_t semi[2400][65],
+                     int* num_valid, int* patch_to_valid_index, 
+                     int* N_indices, float* N_probs);
