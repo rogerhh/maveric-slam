@@ -1,5 +1,5 @@
 #include "vocabulary.h"
-#include "quantized_pair0.h"
+#include "quantized_image0.h"
 #include "top_N.h"
 #include "gemmini_functions_cpu.h"
 
