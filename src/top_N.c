@@ -132,44 +132,33 @@ void compute_top_N(float scale, int8_t semi[2400][65], int N,
 }
 
 void compute_softmax(float scale, int8_t semi[2400][65],
-                     int* num_valid, int* patch_to_valid_index, 
-                     int* N_indices, float* N_probs) {
+                     int* num_valid,
+                     int* max_indices, float* probs) {
     
-   // // First compute the sequence {1, scale / 1, scale^2 / 2!, scale^3 / 3!, ...}
-   // float scale_poly[P] = {0};
-   // scale_poly[0] = 1;
-   // for(int i = 1; i < P; i++) {
-   //     scale_poly[i] = scale_poly[i - 1] * scale / i;
-   // }
+   // First compute the sequence {1, scale / 1, scale^2 / 2!, scale^3 / 3!, ...}
+   float scale_poly[P] = {0};
+   scale_poly[0] = 1;
+   for(int i = 1; i < P; i++) {
+       scale_poly[i] = scale_poly[i - 1] * scale / i;
+   }
 
-   // // First go through each row and compute probability of each row and max index
-   // // Also find the range of the probabilities and the number of valid probabilities
-   // int patch_to_valid_index[2400] = {0};
-   // int max_indices[MAX_VALID_FEATURES] = {0};
-   // float probs[MAX_VALID_FEATURES] = {0};
-   // float max_prob = 0, min_prob = FLT_MAX;
-   // int num_valid = 0;
-   // int valid_patches[MAX_VALID_FEATURES] = {0};
+   // First go through each row and compute probability of each row and max index
+   // Also find the range of the probabilities and the number of valid probabilities
+   int valid_patches[2400] = {0};
 
-   // for(int patch = 0; patch < 2400; patch++) {
-   //     int max_index;
-   //     float prob;
-   //     approx_softmax(scale_poly, semi[patch], &max_index, &prob);
-   //     if(max_index != 64) {
-   //         patch_to_valid_index[patch] = num_valid;
+   for(int patch = 0; patch < 2400; patch++) {
+       int max_index;
+       float prob;
+       approx_softmax(scale_poly, semi[patch], &max_index, &prob);
 
-   //         valid_patches[num_valid] = patch;
-   //         max_indices[num_valid] = max_index;
-   //         probs[num_valid] = prob;
-
-   //         if(probs[patch] > max_prob) {
-   //             max_prob = probs[patch];
-   //         }
-   //         if(probs[patch] < min_prob) {
-   //             min_prob = probs[patch];
-   //         }
-
-   //         num_valid++;
-   //     }
-   // }
+       if(max_index != 64) {
+           max_indices[patch] = max_index;
+           probs[patch] = prob;
+           (*num_valid)++;
+       }
+       else {
+           max_indices[patch] = -1;
+           probs[patch] = -1;
+       }
+   }
 }

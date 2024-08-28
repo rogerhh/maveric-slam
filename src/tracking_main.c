@@ -11,7 +11,6 @@
 #define MATCH_THRESHOLD 0.9
 #define MAX_NUM_MATCH 2000
 #define N 100
-#define N500 500
 
 int main() {
     Frame frame0;
@@ -26,49 +25,50 @@ int main() {
                  image1_semi_scale, image1_semi,
                  image1_desc_scale, image1_desc,
                  &frame1);
-    // //
-    // // First select top 100 features
-    // int patches[N500] = {0};
-    // int indices[N500] = {0};
-    // float probs[N500] = {0};
-    // int num_valid_patches;
+
+    // // First compute softmax for frame0
+    // int num_valid_patches0 = 0;
+    // int max_indices0[2400] = {0};
+    // int probs0[2400] = {0};
+    // compute_softmax(frame0.semi_scale, image0.semi,
+    //                  &num_valid_patches,
+    //                  max_indices0, probs0);
+
+    // // ==================== ABOVE THIS POINT IS SETUP ================
+
+    // // Then select top 100 features from frame1
+    // int patches1[N] = {0};
+    // int indices1[N] = {0};
+    // float probs1[N] = {0};
+    // int num_valid_patches1;
 
     // compute_top_N(image0_semi_scale, image0_semi, N, 
     //               &num_valid_patches, patches, indices, probs);
-    
-    // First select top 100 features
-    int patches[N] = {0};
-    int indices[N] = {0};
-    float probs[N] = {0};
-    int num_valid_patches;
 
-    compute_top_N(image0_semi_scale, image0_semi, N, 
-                  &num_valid_patches, patches, indices, probs);
+    // // Define some arbitrary shift and radius
+    // int shift_x_grid = 4;
+    // int shift_y_grid = 4;
+    // int radius_grid = 4;
 
-    // Define some arbitrary shift and radius
-    int shift_x_grid = 4;
-    int shift_y_grid = 4;
-    int radius_grid = 4;
+    // float points1[MAX_NUM_MATCH][2];
+    // float points2[MAX_NUM_MATCH][2];
 
-    float points1[MAX_NUM_MATCH][2];
-    float points2[MAX_NUM_MATCH][2];
+    // // Match features
+    // int num_matches = 0;
+    // for(int i = 0; i < num_valid_patches; i++) {
+    //     int patch = patches[i];
+    //     int x0_grid = patch / frame1.feature_rows;
+    //     int y0_grid = patch % frame1.feature_rows;
 
-    // Match features
-    int num_matches = 0;
-    for(int i = 0; i < num_valid_patches; i++) {
-        int patch = patches[i];
-        int x0_grid = patch / frame1.feature_rows;
-        int y0_grid = patch % frame1.feature_rows;
+    //     bool found_match = false;
+    //     int best_index = -1;
+    //     float best_norm = 0;
 
-        bool found_match = false;
-        int best_index = -1;
-        float best_norm = 0;
-
-        int min_x1_grid = MAX(x0_grid + shift_x_grid - radius_grid, 0);
-        int max_x1_grid = MIN(x0_grid + shift_x_grid + radius_grid, frame1.feature_cols - 1);
-        int min_y1_grid = MAX(y0_grid + shift_y_grid - radius_grid, 0);
-        int max_y1_grid = MIN(y0_grid + shift_y_grid + radius_grid, frame1.feature_rows - 1);
-    }
+    //     int min_x1_grid = MAX(x0_grid + shift_x_grid - radius_grid, 0);
+    //     int max_x1_grid = MIN(x0_grid + shift_x_grid + radius_grid, frame1.feature_cols - 1);
+    //     int min_y1_grid = MAX(y0_grid + shift_y_grid - radius_grid, 0);
+    //     int max_y1_grid = MIN(y0_grid + shift_y_grid + radius_grid, frame1.feature_rows - 1);
+    // }
 
 
     // // Iterate over the search window

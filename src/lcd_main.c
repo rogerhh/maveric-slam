@@ -82,7 +82,7 @@ int main() {
            features, base_descriptors, scores,      // A, B, C
            256, 256, 10,                            // strideA, strideB, strideC
            feature_scale, 1.0,                      // scaleA, scaleB
-           false, true);                            // transposeA, transposeB
+           false, false);                           // transposeA, transposeB
                                                     // mvout scale should be 1/256
                                                     
     int sel_base_nodes[N] = {0};
