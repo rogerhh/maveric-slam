@@ -6,8 +6,9 @@ import time
 
 import cv2
 import torch
+import torchvision.transforms
 
-CELL_SIZE = 4
+CELL_SIZE = 8
 
 # Stub to warn about opencv version.
 if int(cv2.__version__[0]) < 3: # pragma: no cover
@@ -194,6 +195,20 @@ class SuperPointFrontend(object):
       inp = inp.cuda()
     # Forward pass of network.
     outs = self.net.forward(inp)
+
+    unique_outs0 = torch.unique(outs[0])
+    unique_outs1 = torch.unique(outs[1])
+
+    scale0 = torch.min(unique_outs0[1:] - unique_outs0[:-1])
+    scale1 = torch.min(unique_outs1[1:] - unique_outs1[:-1])
+
+    q_outs0 = torch.round(outs[0] / scale0).int()
+    q_outs1 = torch.round(outs[1] / scale1).int()
+
+    return scale0, q_outs0, scale1, q_outs1, outs
+
+
+
     semi, coarse_desc = outs[0], outs[1]
     # Convert pytorch -> numpy.
     semi = semi.data.cpu().numpy().squeeze()
@@ -550,8 +565,10 @@ if __name__ == '__main__':
       help='Path to input image1.')
   parser.add_argument('output_path', type=str, default='',
       help='Path to output file.')
-  parser.add_argument('--weights_path', type=str, default='superpoint_quantized.pt',
-      help='Path to pretrained weights file (default: superpoint_quantized.pt).')
+  parser.add_argument('gt_path', type=str, default='',
+      help='Path to gt file.')
+  parser.add_argument('--weights_path', type=str, default='superpoint_quantized_nonorm.pt',
+      help='Path to pretrained weights file (default: superpoint_quantized_nonorm.pt).')
   parser.add_argument('--max_features', type=int, default=None,
       help='Maximum number of keypoints to print (default: no limit).')
   parser.add_argument('--nms_dist', type=int, default=4,
@@ -578,14 +595,124 @@ if __name__ == '__main__':
   img0 = cv2.imread(opt.img0_path, 0).astype('float32') / 255.0
   img1 = cv2.imread(opt.img1_path, 0).astype('float32') / 255.0
 
-  crop_shape = (640, 192)
-  img0 = cv2.resize(img0, crop_shape)
-  img1 = cv2.resize(img1, crop_shape)
+  img0 = torch.from_numpy(np.expand_dims(img0, axis=0))
+  img1 = torch.from_numpy(np.expand_dims(img1, axis=0))
+
+  # Step 1: Crop the image to (330, 880) centered
+  crop_transform = torchvision.transforms.CenterCrop((330, 880))
+  img0 = crop_transform(img0)
+  img1 = crop_transform(img1)
+
+  # Step 2: Resize the cropped image to (, 240)
+  resize_transform = torchvision.transforms.Resize((240, 640))
+  img0 = resize_transform(img0)
+  img1 = resize_transform(img0)
+
+  img0 = torch.squeeze(img0, dim=0).numpy()
+  img1 = torch.squeeze(img1, dim=0).numpy()
+
+  # crop_shape = (640, 192)
+  # img0 = cv2.resize(img0, crop_shape)
+  # img1 = cv2.resize(img1, crop_shape)
 
   print("image size = ", img0.shape)
 
-  pts0, desc0, heatmap0 = fe.run(img0)
-  pts1, desc1, heatmap1 = fe.run(img1)
+  semi_scale = [0, 0]
+  semi = [None, None]
+  desc_scale = [0, 0]
+  desc = [None, None]
+  outs = [None, None]
+  img = [img0, img1]
+
+  semi_scale[0], semi[0], desc_scale[0], desc[0], outs[0] = fe.run(img0)
+  semi_scale[1], semi[1], desc_scale[1], desc[1], outs[1] = fe.run(img1)
+
+  # with open(opt.output_path, 'w') as fout:
+  #     fout.write("#pragma once\n\n")
+  #     fout.write("#include <stdint.h>\n\n")
+
+  #     cell_size = CELL_SIZE
+  #     fout.write(f"const int cell_size = {cell_size};\n\n")
+
+  #     for i in [0, 1]:
+  #         h, w = img[i].shape
+  #         hc, wc = h // cell_size, w // cell_size
+  #         prefix = f"image{i}"
+  #         fout.write(f"const int {prefix}_rows = {img[i].shape[0]};\n")
+  #         fout.write(f"const int {prefix}_cols = {img[i].shape[1]};\n")
+  #         fout.write(f"const int {prefix}_channels = 1;\n\n")
+
+  #         fout.write(f"const int {prefix}_feature_rows = {img[i].shape[0] // cell_size};\n")
+  #         fout.write(f"const int {prefix}_feature_cols = {img[i].shape[1] // cell_size};\n\n")
+
+  #         fout.write(f"const float {prefix}_semi_scale = {semi_scale[0]};\n")
+  #         fout.write(f"const int8_t {prefix}_semi[{wc}][{hc}][65] = {{\n")
+  #         for c in range(wc):
+  #             for r in range(hc):
+  #                 for cc in range(65):
+  #                     fout.write(f"{semi[i][0, cc, r, c]}, ")
+  #                 fout.write("\n")
+  #         fout.write("};\n\n")
+
+  #         fout.write(f"const float {prefix}_desc_scale = {desc_scale[0]};\n")
+  #         fout.write(f"const int8_t {prefix}_desc[{wc}][{hc}][256] = {{\n")
+  #         for c in range(wc):
+  #             for r in range(hc):
+  #                 for cc in range(256):
+  #                     fout.write(f"{desc[i][0, cc, r, c]}, ")
+  #                 fout.write("\n")
+  #         fout.write("};\n\n")
+
+  if opt.gt_path.strip():
+      with open(opt.gt_path, 'w') as fout:
+          fout.write("#pragma once\n\n")
+          fout.write("#include <stdint.h>\n\n")
+
+          cell_size = CELL_SIZE
+          fout.write(f"const int cell_size = {cell_size};\n\n")
+          for i in [0, 1]:
+              semi, coarse_desc = outs[i][0], outs[i][1]
+              # Convert pytorch -> numpy.
+              semi = semi.data.cpu().numpy().squeeze()
+              # --- Process points.
+              dense = np.exp(semi) # Softmax.
+              dense = dense / (np.sum(dense, axis=0)+.00001) # Should sum to 1.
+
+              dense = dense[:-1,:,:]
+
+              print(dense.shape)
+
+              max_vals = np.max(dense, axis=0)
+              max_indices = np.argmax(dense, axis=0)
+
+              print(max_vals.shape)
+
+              h, w = img[i].shape
+              hc, wc = h // cell_size, w // cell_size
+              prefix = f"image{i}"
+              fout.write(f"const int {prefix}_rows_gt = {img[i].shape[0]};\n")
+              fout.write(f"const int {prefix}_cols_gt = {img[i].shape[1]};\n")
+              fout.write(f"const int {prefix}_channels_gt = 1;\n\n")
+
+
+              fout.write(f"const int {prefix}_feature_rows_gt = {img[i].shape[0] // cell_size};\n")
+              fout.write(f"const int {prefix}_feature_cols_gt = {img[i].shape[1] // cell_size};\n\n")
+
+              fout.write(f"const float {prefix}_probs_gt[{wc}][{hc}] = {{\n")
+              for c in range(wc):
+                  for r in range(hc):
+                      fout.write(f"{max_vals[r, c]},\n")
+              fout.write("};\n\n")
+
+              fout.write(f"const int {prefix}_indices_gt[{wc}][{hc}] = {{\n")
+              for c in range(wc):
+                  for r in range(hc):
+                      fout.write(f"{max_indices[r, c]},\n")
+              fout.write("};\n\n")
+
+
+  exit(0)
+
 
   num_features0 = pts0.shape[1] if opt.max_features is None else min(opt.max_features, pts0.shape[1])
   num_features1 = pts1.shape[1] if opt.max_features is None else min(opt.max_features, pts1.shape[1])

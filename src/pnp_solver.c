@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <float.h>
-#include "../include/svd/svd.h"
+#include "svd.h"
 #include "pnp_solver.h"
 
 void normalize_points(const int num_points, const float points[][2], 
