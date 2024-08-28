@@ -62,20 +62,14 @@ int main() {
     compute_top_N(image0_semi_scale, image0_semi, N, 
                   &num_valid_patches, patches, indices, probs);
 
-    printf("Num valid patches: %d\n", num_valid_patches);
-    for(int i = 0; i < num_valid_patches; i++) {
-        printf("Patch index: %d, index: %d, probability: %f\n", patches[i], indices[i], probs[i]);
-    }
-
-    printf("before construct features\n");
-    fflush(stdout);
-
     // Construct the features matrix
     float feature_scale = image0_desc_scale;
     int8_t features[N][256] = {0};
 
     for(int i = 0; i < num_valid_patches; i++) {
         int patch = patches[i];
+        int patch_row = patch / 30;
+        int patch_col = patch % 30;
         for(int j = 0; j < 256; j++) {
             features[i][j] = image0_desc[patch][j];
         }
@@ -90,6 +84,7 @@ int main() {
            feature_scale, 1.0,                      // scaleA, scaleB
            false, true);                            // transposeA, transposeB
                                                     // mvout scale should be 1/256
+                                                    
     int sel_base_nodes[N] = {0};
     for(int i = 0; i < num_valid_patches; i++) {
         float max_score = 0;

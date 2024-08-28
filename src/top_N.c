@@ -47,7 +47,7 @@ void approx_softmax(float* scale_poly, int8_t semi_row[65], int* max_index, floa
 
 }
 
-void compute_top_N(float scale, int8_t semi[80][30][65], int N, 
+void compute_top_N(float scale, int8_t semi[2400][65], int N, 
                    int* num_selected, int* N_patches, int* N_indices, float* N_probs) {
     
     // First compute the sequence {1, scale / 1, scale^2 / 2!, scale^3 / 3!, ...}
@@ -59,28 +59,25 @@ void compute_top_N(float scale, int8_t semi[80][30][65], int N,
 
     // First go through each row and compute probability of each row and max index
     // Also find the range of the probabilities and the number of valid probabilities
-    int max_indices[80][30] = {0};
-    float probs[80][30] = {0};
+    int max_indices[2400] = {0};
+    float probs[2400] = {0};
     float max_prob = 0, min_prob = FLT_MAX;
     int num_valid = 0;
     int valid_patches[2400] = {0};
 
-    for(int row = 0; row < 80; row++) {
-        for(int col = 0; col < 30; col++) {
-            approx_softmax(scale_poly, semi[row][col], &max_indices[row][col], &probs[row][col]);
-            printf("Patch: %d, index: %d, probability: %f\n", row * 30 + col, max_indices[row][col], probs[row][col]);
-            if(max_indices[row][col] != 64) {
-                valid_patches[num_valid] = row * 30 + col;
+    for(int patch = 0; patch < 2400; patch++) {
+        approx_softmax(scale_poly, semi[patch], &max_indices[patch], &probs[patch]);
+        if(max_indices[patch] != 64) {
+            valid_patches[num_valid] = patch;
 
-                if(probs[row][col] > max_prob) {
-                    max_prob = probs[row][col];
-                }
-                if(probs[row][col] < min_prob) {
-                    min_prob = probs[row][col];
-                }
-
-                num_valid++;
+            if(probs[patch] > max_prob) {
+                max_prob = probs[patch];
             }
+            if(probs[patch] < min_prob) {
+                min_prob = probs[patch];
+            }
+
+            num_valid++;
         }
     }
 
@@ -97,9 +94,9 @@ void compute_top_N(float scale, int8_t semi[80][30][65], int N,
     float split = N / (float) num_valid;
     float threshold = max_prob * split + min_prob * (1 - split);
 
-    printf("Max prob = %f\n", max_prob);
-    printf("Min prob = %f\n", min_prob);
-    printf("Select threshold = %f\n", threshold);
+    // printf("Max prob = %f\n", max_prob);
+    // printf("Min prob = %f\n", min_prob);
+    // printf("Select threshold = %f\n", threshold);
 
     *num_selected = 0;
     for(int i = 0; i < num_valid; i++) {
@@ -108,15 +105,14 @@ void compute_top_N(float scale, int8_t semi[80][30][65], int N,
         float prob = ((float*) probs)[patch];
 
         if(prob >= threshold) {
-            if(*num_selected >= N) {
-                printf("Over selecting!\n");
-            }
-            else {
-                N_patches[*num_selected] = patch;
-                N_indices[*num_selected] = ((int*) max_indices)[patch];
-                N_probs[*num_selected] = prob;
+            N_patches[*num_selected] = patch;
+            N_indices[*num_selected] = ((int*) max_indices)[patch];
+            N_probs[*num_selected] = prob;
 
-                (*num_selected)++;
+            (*num_selected)++;
+
+            if(*num_selected >= N) {
+                return;
             }
         }
 

@@ -3,8 +3,9 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 
-#define GEMMINI_TYPE int32_t
+#define GEMMINI_TYPE int8_t
 #define elem_t GEMMINI_TYPE
 #define scale_t GEMMINI_TYPE
 

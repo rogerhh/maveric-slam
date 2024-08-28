@@ -627,41 +627,41 @@ if __name__ == '__main__':
   semi_scale[0], semi[0], desc_scale[0], desc[0], outs[0] = fe.run(img0)
   semi_scale[1], semi[1], desc_scale[1], desc[1], outs[1] = fe.run(img1)
 
-  # with open(opt.output_path, 'w') as fout:
-  #     fout.write("#pragma once\n\n")
-  #     fout.write("#include <stdint.h>\n\n")
+  with open(opt.output_path, 'w') as fout:
+      fout.write("#pragma once\n\n")
+      fout.write("#include <stdint.h>\n\n")
 
-  #     cell_size = CELL_SIZE
-  #     fout.write(f"const int cell_size = {cell_size};\n\n")
+      cell_size = CELL_SIZE
+      fout.write(f"const int cell_size = {cell_size};\n\n")
 
-  #     for i in [0, 1]:
-  #         h, w = img[i].shape
-  #         hc, wc = h // cell_size, w // cell_size
-  #         prefix = f"image{i}"
-  #         fout.write(f"const int {prefix}_rows = {img[i].shape[0]};\n")
-  #         fout.write(f"const int {prefix}_cols = {img[i].shape[1]};\n")
-  #         fout.write(f"const int {prefix}_channels = 1;\n\n")
+      for i in [0, 1]:
+          h, w = img[i].shape
+          hc, wc = h // cell_size, w // cell_size
+          prefix = f"image{i}"
+          fout.write(f"const int {prefix}_rows = {img[i].shape[0]};\n")
+          fout.write(f"const int {prefix}_cols = {img[i].shape[1]};\n")
+          fout.write(f"const int {prefix}_channels = 1;\n\n")
 
-  #         fout.write(f"const int {prefix}_feature_rows = {img[i].shape[0] // cell_size};\n")
-  #         fout.write(f"const int {prefix}_feature_cols = {img[i].shape[1] // cell_size};\n\n")
+          fout.write(f"const int {prefix}_feature_rows = {img[i].shape[0] // cell_size};\n")
+          fout.write(f"const int {prefix}_feature_cols = {img[i].shape[1] // cell_size};\n\n")
 
-  #         fout.write(f"const float {prefix}_semi_scale = {semi_scale[0]};\n")
-  #         fout.write(f"const int8_t {prefix}_semi[{wc}][{hc}][65] = {{\n")
-  #         for c in range(wc):
-  #             for r in range(hc):
-  #                 for cc in range(65):
-  #                     fout.write(f"{semi[i][0, cc, r, c]}, ")
-  #                 fout.write("\n")
-  #         fout.write("};\n\n")
+          fout.write(f"const float {prefix}_semi_scale = {semi_scale[0]};\n")
+          fout.write(f"const int8_t {prefix}_semi[{wc * hc}][65] = {{\n")
+          for c in range(wc):
+              for r in range(hc):
+                  for cc in range(65):
+                      fout.write(f"{semi[i][0, cc, r, c]}, ")
+                  fout.write("\n")
+          fout.write("};\n\n")
 
-  #         fout.write(f"const float {prefix}_desc_scale = {desc_scale[0]};\n")
-  #         fout.write(f"const int8_t {prefix}_desc[{wc}][{hc}][256] = {{\n")
-  #         for c in range(wc):
-  #             for r in range(hc):
-  #                 for cc in range(256):
-  #                     fout.write(f"{desc[i][0, cc, r, c]}, ")
-  #                 fout.write("\n")
-  #         fout.write("};\n\n")
+          fout.write(f"const float {prefix}_desc_scale = {desc_scale[0]};\n")
+          fout.write(f"const int8_t {prefix}_desc[{wc * hc}][256] = {{\n")
+          for c in range(wc):
+              for r in range(hc):
+                  for cc in range(256):
+                      fout.write(f"{desc[i][0, cc, r, c]}, ")
+                  fout.write("\n")
+          fout.write("};\n\n")
 
   if opt.gt_path.strip():
       with open(opt.gt_path, 'w') as fout:
