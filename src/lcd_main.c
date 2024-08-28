@@ -41,7 +41,7 @@ void get_binary_descriptor(float scale, int* feature, int* binary_descriptor, in
 int count_matching_bits(int* binary_desc1, int* binary_desc2, int size) {
     int count = 0;
     for(int i = 0; i < size; i++) {
-        int32_t matching = ~(binary_desc1[i] ^ binary_desc2[i]);
+        int matching = ~(binary_desc1[i] ^ binary_desc2[i]);
         for(int j = 0; j < 4; j++) {
             int partial_match = (matching >> (j * 8)) & 255;
             count += count_lookup[partial_match];
@@ -72,7 +72,7 @@ int main() {
 
     // Construct the features matrix
     float feature_scale = image0_desc_scale;
-    int32_t features[N][256] = {0};
+    int8_t features[N][256] = {0};
 
     for(int i = 0; i < num_valid_patches; i++) {
         int patch = patches[i];
@@ -81,7 +81,7 @@ int main() {
         }
     }
 
-    int32_t scores[N][num_base_nodes];
+    int8_t scores[N][num_base_nodes];
 
     // We have an Nx256 matrix and an 10x256 matrix
     matmul(N, num_base_nodes, 256,                  // I, J, K
