@@ -2,6 +2,7 @@
 #include <float.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #define P 5
 
@@ -24,11 +25,11 @@ void approx_softmax(float* scale_poly, int8_t semi_row[65], int* max_index, floa
     // We will skip over all negative values
 
     *max_index = 64;
+    *max_prob = -1;
     float max_exp_x = 0;
     float denominator = FLT_MIN;
 
     for(int i = 0; i < 65; i++) {
-        // printf("%d ", semi_row[i]);
         // Skip negative values
         if(semi_row[i] < 0) {
             continue;
@@ -42,7 +43,6 @@ void approx_softmax(float* scale_poly, int8_t semi_row[65], int* max_index, floa
 
         denominator += exp_x;
     }
-    // printf("\n");
 
     *max_prob = max_exp_x / denominator;
 
@@ -52,6 +52,8 @@ void approx_softmax(float* scale_poly, int8_t semi_row[65], int* max_index, floa
 
 void compute_top_N(float scale, int8_t semi[2400][65], int N, 
                    int* num_selected, int* N_patches, int* N_indices, float* N_probs) {
+
+    *num_selected = 0;
     
     // First compute the sequence {1, scale / 1, scale^2 / 2!, scale^3 / 3!, ...}
     float scale_poly[P] = {0};
@@ -69,19 +71,19 @@ void compute_top_N(float scale, int8_t semi[2400][65], int N,
     int valid_patches[MAX_VALID_FEATURES] = {0};
 
     for(int patch = 0; patch < 2400; patch++) {
-        int max_index;
-        float prob;
+        int max_index = 64;
+        float prob = -1;
         approx_softmax(scale_poly, semi[patch], &max_index, &prob);
-        if(max_index != 64) {
+        if(max_index != 64 && prob > 0.01) {
             valid_patches[num_valid] = patch;
             max_indices[num_valid] = max_index;
             probs[num_valid] = prob;
 
-            if(probs[patch] > max_prob) {
-                max_prob = probs[patch];
+            if(probs[num_valid] > max_prob) {
+                max_prob = probs[num_valid];
             }
-            if(probs[patch] < min_prob) {
-                min_prob = probs[patch];
+            if(probs[num_valid] < min_prob) {
+                min_prob = probs[num_valid];
             }
 
             num_valid++;
@@ -151,13 +153,12 @@ void compute_softmax(float scale, int8_t semi[2400][65],
        float prob;
        approx_softmax(scale_poly, semi[patch], &max_index, &prob);
 
+       max_indices[patch] = max_index;
        if(max_index != 64) {
-           max_indices[patch] = max_index;
            probs[patch] = prob;
            (*num_valid)++;
        }
        else {
-           max_indices[patch] = -1;
            probs[patch] = -1;
        }
    }
