@@ -10,7 +10,7 @@
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 
 #define MATCH_THRESHOLD 0.9
-#define MAX_NUM_MATCH 2000
+#define MAX_NUM_MATCH 150
 #define N 100
 
 // Normalize and compute the L2 norm between the 2 Qint arrays

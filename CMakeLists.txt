@@ -20,6 +20,11 @@ add_executable(lcd_main
                src/lcd_main.c
                src/top_N.c)
 
+add_executable(run_nms
+               src/run_nms.c
+               src/top_N.c)
+
 target_link_libraries(tracking_main m)
 target_link_libraries(lcd_main m)
+target_link_libraries(run_nms m)
 
