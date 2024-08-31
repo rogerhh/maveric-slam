@@ -24,7 +24,11 @@ add_executable(run_nms
                src/run_nms.c
                src/top_N.c)
 
+add_executable(run_relin
+               src/run_relin.c)
+
 target_link_libraries(tracking_main m)
 target_link_libraries(lcd_main m)
 target_link_libraries(run_nms m)
+target_link_libraries(run_relin m)
 
