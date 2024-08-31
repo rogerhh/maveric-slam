@@ -598,15 +598,15 @@ if __name__ == '__main__':
   img0 = torch.from_numpy(np.expand_dims(img0, axis=0))
   img1 = torch.from_numpy(np.expand_dims(img1, axis=0))
 
-  # Step 1: Crop the image to (330, 880) centered
-  crop_transform = torchvision.transforms.CenterCrop((330, 880))
-  img0 = crop_transform(img0)
-  img1 = crop_transform(img1)
+  # # Step 1: Crop the image to (330, 880) centered
+  # crop_transform = torchvision.transforms.CenterCrop((330, 880))
+  # img0 = crop_transform(img0)
+  # img1 = crop_transform(img1)
 
   # Step 2: Resize the cropped image to (, 240)
-  resize_transform = torchvision.transforms.Resize((240, 640))
+  resize_transform = torchvision.transforms.Resize((192, 640))
   img0 = resize_transform(img0)
-  img1 = resize_transform(img0)
+  img1 = resize_transform(img1)
 
   img0 = torch.squeeze(img0, dim=0).numpy()
   img1 = torch.squeeze(img1, dim=0).numpy()

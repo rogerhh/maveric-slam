@@ -50,7 +50,7 @@ void approx_softmax(float* scale_poly, int8_t semi_row[65], int* max_index, floa
 
 #define MAX_VALID_FEATURES 1000
 
-void compute_top_N(float scale, int8_t semi[2400][65], int N, 
+void compute_top_N(float scale, int8_t semi[1920][65], int N, 
                    int* num_selected, int* N_patches, int* N_indices, float* N_probs) {
 
     *num_selected = 0;
@@ -70,7 +70,7 @@ void compute_top_N(float scale, int8_t semi[2400][65], int N,
     int num_valid = 0;
     int valid_patches[MAX_VALID_FEATURES] = {0};
 
-    for(int patch = 0; patch < 2400; patch++) {
+    for(int patch = 0; patch < 1920; patch++) {
         int max_index = 64;
         float prob = -1;
         approx_softmax(scale_poly, semi[patch], &max_index, &prob);
@@ -133,7 +133,7 @@ void compute_top_N(float scale, int8_t semi[2400][65], int N,
     }
 }
 
-void compute_softmax(float scale, int8_t semi[2400][65],
+void compute_softmax(float scale, int8_t semi[1920][65],
                      int* num_valid,
                      int* max_indices, float* probs) {
     
@@ -146,9 +146,9 @@ void compute_softmax(float scale, int8_t semi[2400][65],
 
    // First go through each row and compute probability of each row and max index
    // Also find the range of the probabilities and the number of valid probabilities
-   int valid_patches[2400] = {0};
+   int valid_patches[1920] = {0};
 
-   for(int patch = 0; patch < 2400; patch++) {
+   for(int patch = 0; patch < 1920; patch++) {
        int max_index;
        float prob;
        approx_softmax(scale_poly, semi[patch], &max_index, &prob);

@@ -15,7 +15,36 @@
 
 // Normalize and compute the L2 norm between the 2 Qint arrays
 // we want to compute dot product of q1 and q2 and divide by the norm of q1 and q2
-float squared_dist(const int8_t* desc1, const int8_t* desc2) {
+void squared_dist(const int8_t* desc1, const int8_t* desc2, 
+                  int* sum, int* norm1_squared, int* norm2_squared) {
+
+    if(*norm1_squared == 0) {
+        *sum = 0;
+        *norm1_squared = 0;
+        *norm2_squared = 0;
+
+        for(int i = 0; i < 256; i++) {
+            *sum += desc1[i] * desc2[i];
+            *norm1_squared += desc1[i] * desc1[i];
+            *norm2_squared += desc2[i] * desc2[i];
+        }
+
+    }
+    else {
+        *sum = 0;
+        *norm2_squared = 0;
+
+        for(int i = 0; i < 64; i++) {
+            *sum += desc1[i] * desc2[i];
+            *norm2_squared += desc2[i] * desc2[i];
+        }
+    }
+
+}
+
+// We want to check v^Tu / (|| v ||_2 || u ||_2) 
+// This is equivalent to (v^Tu)^2 <? thresh^2 * || v || * || u ||
+bool check_dist(const int8_t* desc1, const int8_t* desc2, float thresh) {
     int sum = 0, norm1_squared = 0, norm2_squared = 0;
     for(int i = 0; i < 256; i++) {
         sum += desc1[i] * desc2[i];
@@ -23,7 +52,8 @@ float squared_dist(const int8_t* desc1, const int8_t* desc2) {
         norm2_squared += desc2[i] * desc2[i];
     }
 
-    return sum / (sqrt(norm1_squared) * sqrt(norm2_squared));
+    return sum * sum < norm1_squared * norm2_squared * thresh;
+
 }
 
 void patch_to_grid(int patch, int* grid_x, int* grid_y, int rows, int cols) {
@@ -53,8 +83,8 @@ int main() {
 
     // First compute softmax for frame0
     int num_valid_patches0 = 0;
-    int max_indices0[2400] = {0};
-    float probs0[2400] = {0};
+    int max_indices0[1920] = {0};
+    float probs0[1920] = {0};
     compute_softmax(frame0.semi_scale, frame0.semi,
                      &num_valid_patches0,
                      max_indices0, probs0);
@@ -80,6 +110,7 @@ int main() {
 
     // Match features
     int num_matches = 0;
+
     for(int i = 0; i < num_valid_patches1; i++) {
         int patch1 = patches1[i];
         int x1_grid, y1_grid;
@@ -99,6 +130,7 @@ int main() {
         int max_y0_grid = MIN(y1_grid + shift_y_grid + radius_grid, frame1.feature_rows - 1);
 
         // printf("%d %d %d %d")
+        int32_t norm1_squared = 0;
 
         for(int x0_grid = min_x0_grid; x0_grid <= max_x0_grid; x0_grid++) {
             for(int y0_grid = min_y0_grid; y0_grid <= max_y0_grid; y0_grid++) {
@@ -116,13 +148,15 @@ int main() {
                 }
 
                 const int8_t* desc0 = ((const int8_t (*)[256]) frame0.desc)[patch0];
-                float dist = squared_dist(desc0, desc1);
-
-                if(dist > MATCH_THRESHOLD * MATCH_THRESHOLD) {
-                    if(!found_match || dist > best_norm) {
+                int norm2_squared, dot_product;
+                squared_dist(desc0, desc1, 
+                             &dot_product, &norm1_squared, &norm2_squared);
+                float dist_squared = dot_product * dot_product / (float) (norm1_squared * norm2_squared);
+                if(dist_squared > (MATCH_THRESHOLD * MATCH_THRESHOLD)) {
+                    if(!found_match || dist_squared > best_norm) {
                       found_match = true;
                       best_index = index0;
-                      best_norm = dist;
+                      best_norm = dist_squared;
                       best_x0_grid = x0_grid;
                       best_y0_grid = y0_grid;
                     }

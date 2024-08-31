@@ -52,15 +52,15 @@ int main() {
 
     // First compute softmax for frame0
     int num_valid_patches1 = 0;
-    int max_indices1[2400] = {0};
-    float probs1[2400] = {0};
-    bool processed[2400] = {0};
+    int max_indices1[1920] = {0};
+    float probs1[1920] = {0};
+    bool processed[1920] = {0};
     compute_softmax(frame1.semi_scale, frame1.semi,
                      &num_valid_patches1,
                      max_indices1, probs1);
 
     const int x_grid_max = 80;
-    const int y_grid_max = 30;
+    const int y_grid_max = 24;
 
     for(int x_grid_i = 0; x_grid_i <= x_grid_max; x_grid_i++) {
         for(int y_grid_i = 0; y_grid_i <= y_grid_max; y_grid_i++) {
@@ -155,7 +155,7 @@ int main() {
         }
     }
 
-    for(int patch = 0; patch < 2400; patch++) {
+    for(int patch = 0; patch < 1920; patch++) {
         int index = max_indices1[patch];
         if(index == 64) { continue; }
 

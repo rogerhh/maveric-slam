@@ -68,8 +68,8 @@ int main() {
 
     for(int i = 0; i < num_valid_patches; i++) {
         int patch = patches[i];
-        int patch_row = patch / 30;
-        int patch_col = patch % 30;
+        int patch_row = patch / image0_feature_rows;
+        int patch_col = patch % image0_feature_rows;
         for(int j = 0; j < 256; j++) {
             features[i][j] = image0_desc[patch][j];
         }
