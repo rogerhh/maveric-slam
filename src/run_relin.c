@@ -111,7 +111,7 @@ void LogMap(const float Q[3][3], float H[3][3], float omega[3]) {
     H[2][0] = -0.5 * omega[1];
     H[2][1] = 0.5 * omega[0];
 
-    float c = 1 / theta2 - (1 + cos(theta)) / (2 * theta * sin(theta));
+    float c = 1 / theta2 - (1 + cos_impl(theta)) / (2 * theta * sin_impl(theta));
 
     float w00 = omega[0] * omega[0];
     float w01 = omega[0] * omega[1];
