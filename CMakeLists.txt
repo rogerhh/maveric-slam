@@ -27,8 +27,14 @@ add_executable(run_nms
 add_executable(run_relin
                src/run_relin.c)
 
+add_executable(local_bundle_adjustment
+               src/local_bundle_adjustment.c
+               src/types.c
+               src/projection_factor.c)
+
 target_link_libraries(tracking_main m)
 target_link_libraries(lcd_main m)
 target_link_libraries(run_nms m)
 target_link_libraries(run_relin m)
+target_link_libraries(local_bundle_adjustment m)
 
