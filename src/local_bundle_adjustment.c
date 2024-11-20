@@ -143,22 +143,24 @@ int main() {
 
 
     // Allocate factor matrix that can be reused
-    float J_factor[FACTOR_HEIGHT * FACTOR_WIDTH];
+    // J_factor_chunk contains all the factors for a single chunk
+    float J_factor_chunk[NUM_POSES * LDMK_CHUNK][FACTOR_HEIGHT * FACTOR_WIDTH];
     float H_factor[FACTOR_WIDTH * FACTOR_WIDTH];
 
     for(int chunk_start = 0; chunk_start < NUM_LDMKS; chunk_start += LDMK_CHUNK) {
         int chunk_end = min(chunk_start + LDMK_CHUNK, NUM_LDMKS);
         zero_block_diagonal_matrix(A_chunk, TOTAL_LDMK_DIM, LDMK_DIM);
         zero_matrix(B_chunk, SUBDIAG_HEIGHT, TOTAL_LDMK_DIM);
+        initialize_random_matrix(J_factor_chunk, 
+                                 FACTOR_HEIGHT * NUM_POSES * LDMK_CHUNK, 
+                                 FACTOR_WIDTH);
         for(int chunk_i = 0; chunk_i < LDMK_CHUNK; chunk_i++) {
             int ldmk_id = chunk_start + chunk_i;
             for(int pose_id = 0; pose_id < NUM_POSES; pose_id++) {
                 int pose_idx = pose_id * POSE_DIM;
                 int ldmk_idx = chunk_i * LDMK_DIM;
 
-                // Initialize the factor matrix
-                initialize_random_matrix(J_factor, FACTOR_HEIGHT, FACTOR_WIDTH);
-
+                float* J_factor = J_factor_chunk[pose_id * chunk_i];
 
                 // Compute H_factor = J_factor^T * J_factor
                 // This one does not have to be mapped onto accelerator
