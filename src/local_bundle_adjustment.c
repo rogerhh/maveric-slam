@@ -149,11 +149,15 @@ int main() {
 
     for(int chunk_start = 0; chunk_start < NUM_LDMKS; chunk_start += LDMK_CHUNK) {
         int chunk_end = min(chunk_start + LDMK_CHUNK, NUM_LDMKS);
+
+        /*** DONT MEASURE THIS START ***/
         zero_block_diagonal_matrix(A_chunk, TOTAL_LDMK_DIM, LDMK_DIM);
         zero_matrix(B_chunk, SUBDIAG_HEIGHT, TOTAL_LDMK_DIM);
         initialize_random_matrix(J_factor_chunk, 
                                  FACTOR_HEIGHT * NUM_POSES * LDMK_CHUNK, 
                                  FACTOR_WIDTH);
+        /*** DONT MEASURE THIS END ***/
+
         for(int chunk_i = 0; chunk_i < LDMK_CHUNK; chunk_i++) {
             int ldmk_id = chunk_start + chunk_i;
             for(int pose_id = 0; pose_id < NUM_POSES; pose_id++) {
