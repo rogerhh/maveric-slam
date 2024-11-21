@@ -236,13 +236,13 @@ int main() {
                 1, 1, 0,                                            // scaleA, scaleB, scaleD
                 false, false); // transposeA, transposeB
 
-        // Compute C = C - BA^-1 * B by computing C^T = C^T - B^T * (BA^-1)^T
+        // Compute C = C - BA^-1 * B^T by computing C^T = C^T - B^T^T * (BA^-1)^T
         matmul2(TOTAL_POSE_DIM, TOTAL_POSE_DIM, TOTAL_LDMK_DIM,     // I, J, K
                 B_chunk, B_Ainv_chunk, C, C,                        // A, B, D, C
                 SUBDIAG_HEIGHT, SUBDIAG_HEIGHT,                     // strideA, strideB
                 SUBDIAG_HEIGHT, SUBDIAG_HEIGHT,                     // strideD, strideC
                 -1, 1, 1,                                           // scaleA, scaleB, scaleD
-                true, true);                                        // transposeA, transposeB
+                true, false);                                       // transposeA, transposeB
 
 
     }
