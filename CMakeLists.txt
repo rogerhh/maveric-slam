@@ -32,9 +32,14 @@ add_executable(local_bundle_adjustment
                src/types.c
                src/projection_factor.c)
 
+add_executable(local_feature_matching
+               src/local_feature_matching.c
+               src/types.c)
+
 target_link_libraries(tracking_main m)
 target_link_libraries(lcd_main m)
 target_link_libraries(run_nms m)
 target_link_libraries(run_relin m)
 target_link_libraries(local_bundle_adjustment m)
+target_link_libraries(local_feature_matching m)
 
