@@ -1,125 +1,80 @@
-#include "vocabulary.h"
-#include "quantized_image0.h"
-#include "top_N.h"
-#include "gemmini_functions_cpu.h"
-
 #include <stdio.h>
 #include <stdbool.h>
 
-#define N 100
+#define NUM_FRAMES 100
+#define FEATURES_PER_FRAME 200
+#define MAX_FEATURE_ID 5000
+#define SOME_SEED 97
+#define SOME_PRIME 29
+#define SOME_PRIME2 73
+#define SOME_PRIME3 997
 
-const int8_t count_lookup[256] = {0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8, };
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#define min(a, b) ((a) < (b) ? (a) : (b))
 
-void get_binary_descriptor(float scale, int* feature, int* binary_descriptor, int size)
-{
-    if(scale > 0) {
-        for(int i = 0; i < size; i++) {
-            binary_descriptor[i] = 0;
-            for(int j = 0; j < 32; j++) {
-                int index = i * 32 + j;
-                binary_descriptor[i] <<= 1;
-                if(feature[index] > 0) {
-                    binary_descriptor[i] += 1;
-                }
-            }
-        }
-    }
-    else {
-        for(int i = 0; i < size; i++) {
-            binary_descriptor[i] = 0;
-            for(int j = 0; j < 32; j++) {
-                int index = i * 32 + j;
-                binary_descriptor[i] <<= 1;
-                if(feature[index] <= 0) {
-                    binary_descriptor[i] += 1;
-                }
-            }
-        }
-    }
-}
-
-int count_matching_bits(int* binary_desc1, int* binary_desc2, int size) {
-    int count = 0;
-    for(int i = 0; i < size; i++) {
-        int matching = ~(binary_desc1[i] ^ binary_desc2[i]);
-        for(int j = 0; j < 4; j++) {
-            int partial_match = (matching >> (j * 8)) & 255;
-            count += count_lookup[partial_match];
-        }
-    }
-    return count;
-}
-
+int prev_frames_num_features[NUM_FRAMES] = {0};
+int prev_frames[NUM_FRAMES][FEATURES_PER_FRAME];
+int cur_frame_num_features = 0;
+int cur_frame[FEATURES_PER_FRAME];
 
 int main() {
-
-    // First select top 500 features
-    int patches[N] = {0};
-    int indices[N] = {0};
-    float probs[N] = {0};
-    int num_valid_patches;
-
-    compute_top_N(image0_semi_scale, image0_semi, N, 
-                  &num_valid_patches, patches, indices, probs);
-
-    // Construct the features matrix
-    float feature_scale = image0_desc_scale;
-    int8_t features[N][256] = {0};
-
-    for(int i = 0; i < num_valid_patches; i++) {
-        int patch = patches[i];
-        int patch_row = patch / image0_feature_rows;
-        int patch_col = patch % image0_feature_rows;
-        for(int j = 0; j < 256; j++) {
-            features[i][j] = image0_desc[patch][j];
+    // First populate the frames with BoW features
+    for(int i = 0; i < NUM_FRAMES; i++) {
+        int features[MAX_FEATURE_ID] = {0};
+        int seed = i * SOME_SEED;
+        for(int j = 0; j < FEATURES_PER_FRAME; j++) {
+            seed = ((seed * SOME_PRIME + SOME_PRIME2 + i) % SOME_PRIME3) % MAX_FEATURE_ID;
+            features[seed] = 1;
         }
-    }
-
-    int8_t scores[N][num_base_nodes];
-
-    // We have an Nx256 matrix and an 10x256 matrix
-    matmul(N, num_base_nodes, 256,                  // I, J, K
-           features, base_descriptors, scores,      // A, B, C
-           256, 256, 10,                            // strideA, strideB, strideC
-           feature_scale, 1.0,                      // scaleA, scaleB
-           false, false);                           // transposeA, transposeB
-                                                    // mvout scale should be 1/256
-                                                    
-    int sel_base_nodes[N] = {0};
-    for(int i = 0; i < num_valid_patches; i++) {
-        float max_score = 0;
-        for(int j = 0; j < num_base_nodes; j++) {
-            float score = scores[i][j];
-            score = scale_arr[j] * score + 256 * bias_arr[j];
-
-            if(score > max_score) {
-                max_score = score;
-                sel_base_nodes[i] = j;
+        for(int j = 0; j < MAX_FEATURE_ID; j++) {
+            if(features[j] == 1) {
+                prev_frames[i][prev_frames_num_features[i]] = j;
+                prev_frames_num_features[i]++;
             }
         }
     }
 
-    // Convert selected features into binary descriptors
-    int binary_features[N][8] = {0};
-    for(int i = 0; i < num_valid_patches; i++) {
-        get_binary_descriptor(image0_desc_scale, features[i], binary_features[i], 8);
+    int features[MAX_FEATURE_ID] = {0};
+    int seed = MAX_FEATURE_ID * SOME_SEED;
+    for(int j = 0; j < FEATURES_PER_FRAME; j++) {
+        seed = (seed * SOME_PRIME + SOME_PRIME2) % MAX_FEATURE_ID;
+        features[seed] = 1;
+    }
+    for(int j = 0; j < MAX_FEATURE_ID; j++) {
+        if(features[j] == 1) {
+            cur_frame[cur_frame_num_features] = j;
+            cur_frame_num_features++;
+        }
     }
 
-    
-    // Do flattened tree traversal
-    for(int i = 0; i < num_valid_patches; i++) {
-        int base_node = sel_base_nodes[i];
-        int best_match = 0;
-        int best_wid = 0;
-        for(int wid = 0; wid < words_per_base_node; wid++) {
-            int match = count_matching_bits(binary_features[i], leaf_descriptors[base_node][wid], 8);
-            if(match > best_match) {
-                best_match = match;
-                best_wid = wid;
+    int num_matched_features[NUM_FRAMES] = {0};
+
+    /************** START MEASURING FROM HERE **************/
+    for(int i = 0; i < NUM_FRAMES; i++) {
+        int num_matching_features = 0;
+
+        int idx1 = 0, idx2 = 0;
+
+        while(idx1 < prev_frames_num_features[i] && idx2 < cur_frame_num_features) {
+            if(prev_frames[i][idx1] == cur_frame[idx2]) {
+                num_matching_features++;
+                idx1++;
+                idx2++;
+            }
+            else if(prev_frames[i][idx1] < cur_frame[idx2]) {
+                idx1++;
+            }
+            else {
+                idx2++;
             }
         }
-
-        printf("Patch: %d, word: %d\n", i, best_wid);
-
+        num_matched_features[i] = num_matching_features;
     }
+
+    /************** END MEASURING HERE **************/
+
+    for(int i = 0; i < NUM_FRAMES; i++) {
+        printf("Frame %d: %d %d\n", i, prev_frames_num_features[i], num_matched_features[i]);
+    }
+
 }

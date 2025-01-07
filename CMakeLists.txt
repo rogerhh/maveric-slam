@@ -16,8 +16,8 @@ add_executable(tracking_main
                src/pnp_solver.c
                src/top_N.c)
 
-add_executable(lcd_main
-               src/lcd_main.c
+add_executable(bow_main
+               src/bow_main.c
                src/top_N.c)
 
 add_executable(run_nms
@@ -36,10 +36,14 @@ add_executable(local_feature_matching
                src/local_feature_matching.c
                src/types.c)
 
+add_executable(lcd_main
+               src/lcd_main.c)
+
 target_link_libraries(tracking_main m)
-target_link_libraries(lcd_main m)
+target_link_libraries(bow_main m)
 target_link_libraries(run_nms m)
 target_link_libraries(run_relin m)
 target_link_libraries(local_bundle_adjustment m)
 target_link_libraries(local_feature_matching m)
+target_link_libraries(lcd_main m)
 

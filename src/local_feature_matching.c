@@ -13,16 +13,20 @@
 
 #define NUM_FEATURE_PER_FRAME 200
 #define NUM_OVERLAPPING_FEATURES 75
-#define MAX_FEATURE_ID 100000
+#define MAX_FEATURE_ID 5000
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
 int word_id_list_len = MAX_FEATURE_ID;
 int word_id_list[MAX_FEATURE_ID];
+bool found[MAX_FEATURE_ID];
+bool found_overlap[MAX_FEATURE_ID];
 
 bool check_duplicate_ids(int len, int* v) {
-    bool found[MAX_FEATURE_ID] = {0};
+    for(int i = 0; i < MAX_FEATURE_ID; i++) {
+        found[i] = false;
+    }
     for(int i = 0; i < len; i++) {
         if(found[v[i]]) {
             printf("Duplicate ID %d\n", v[i]);
@@ -73,8 +77,10 @@ void generate_word_ids(LocalFeaturePool* pool, int num_id, int* ids) {
     }
 
     // Check word id list
-    bool found[MAX_FEATURE_ID] = {0};
-    bool found_overlap[MAX_FEATURE_ID] = {0};
+    for(int i = 0; i < MAX_FEATURE_ID; i++) {
+        found[i] = false;
+        found_overlap[i] = false;
+    }
     for(int i = 0; i < word_id_list_len; i++) {
         if(found[word_id_list[i]]) {
             printf("Duplicate new ID %d\n", word_id_list[i]);
